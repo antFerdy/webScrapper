@@ -3,9 +3,7 @@ package com.example.guestbook;
 
 import com.google.appengine.api.datastore.*;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-import org.jsoup.select.Elements;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -14,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import com.google.appengine.api.datastore.Text;
 
 
 public class ScreenerServlet extends HttpServlet {
@@ -25,60 +24,88 @@ public class ScreenerServlet extends HttpServlet {
 
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String site = req.getParameter("site");
-        Scrapper scrap = new Scrapper();
+        if(site == null || site.equalsIgnoreCase("")) {
+            site = "http://www.akorda.kz/";
+        }
 
-        Document dom = scrap.getDom(site);
+        Scrapper scrap = new Scrapper();
+        String domHtml = scrap.getDom(site);
 
         resp.setCharacterEncoding("UTF-16");
         PrintWriter writer = resp.getWriter();
 
-        compareDomAsText(dom, dom, writer);
+//        Text oldDom = getOldDom(site);
+//        if(oldDom == null) {
+//            writer.println("The site is inserted first time");
+//            saveDom(domHtml, site);
+//        } else {
+//            int compareResult = compareDomAsText(domHtml, oldDom.getValue(), writer);
+//            if(compareResult == 0) {
+//                writer.println("There is no difference " + compareResult);
+//            } else {
+//                writer.println("There is difference " + compareResult);
+//            }
+//        }
+
+        String result = scrap.findElemenByXPath(domHtml, "//*[@id=\"e2c7\"]");
+
+        writer.println(result);
 	}
 
-    /**
-     * Сравнивает DOM сайта со старой версией DOM
-     **/
-    private void compareDOMs(Document expected, Document actual) {
-        List<Node> nodes = actual.childNodes();
-        for(Node node : nodes) {
 
-        }
+
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String elementHtml = req.getParameter("element");
+        String path = req.getParameter("path");
+
+        System.err.println(elementHtml);
+        System.err.println(path);
+
+        resp.getWriter().println(elementHtml + " " + path);
     }
+
+
+
     /**
-     * Сравнивает DOM как текст
-     **/
-    private void compareDomAsText(Document expected, Document actual, PrintWriter writer) {
-//        writer.println(expected.toString());
-        int compareResult = expected.toString().compareTo(actual.toString());
-        if(compareResult == 0) {
-            writer.println("There is no difference");
-        } else {
-            writer.println("There is difference");
+     * получаем DOM по Id
+     * */
+    private Text getOldDom(String site) {
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Key key = KeyFactory.createKey("Dom", site);
+        try {
+            Entity entity = datastore.get(key);
+
+            Text doc = (Text) entity.getProperty("domData");
+            return doc;
+        } catch (EntityNotFoundException e) {
+            e.printStackTrace();
+            return null;
         }
     }
+
 
     /**
      * Сохраняет DOM сайта в хранилище
      * */
-    private void saveDoc() {
+    private void saveDom(String domToSave, String site) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-//        Entity employee = new Entity("Darth");
-//
-//        employee.setProperty("firstName", "Darth");
-//        employee.setProperty("lastName", "Veider");
-//        employee.setProperty("hireDate", new Date());
-//        employee.setProperty("attendedHrTraining", true);
-//
-//        Key key = datastore.put(employee);
-//
-//        PrintWriter writer = resp.getWriter();
-//        writer.write("Entity is inserted " + key.getId());
-//
-//        if(req.getParameter("key") != null) {
-//            Query.Filter propertyFilter =
-//                    new Query.FilterPredicate("lastName", Query.FilterOperator.EQUAL, "Veider");
-//            Query q = new Query("Person").setFilter(propertyFilter);
-//        }
+
+        Entity dom = new Entity("Dom", site);
+        Text txt = new Text(domToSave);
+        dom.setProperty("domData", txt);
+
+        datastore.put(dom);
     }
+
+    /**
+     * Сравнивает DOM как текст
+     **/
+    private int compareDomAsText(String expected, String actual, PrintWriter writer) {
+        int compareResult = expected.compareTo(actual);
+        return compareResult;
+    }
+
+
+
 
 }

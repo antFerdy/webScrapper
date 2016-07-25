@@ -5,8 +5,8 @@
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
 
-    <groupId>com.example.guestbook</groupId>
-    <artifactId>guestbook</artifactId>
+    <groupId>kz.zhur.scrapper</groupId>
+    <artifactId>NewsScrapper</artifactId>
     
 <!-- [START set_versions] -->
     <properties>
@@ -78,6 +78,11 @@
             <artifactId>appengine-api-stubs</artifactId>
             <version>${appengine.sdk.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>us.codecraft</groupId>
+            <artifactId>xsoup</artifactId>
+            <version>0.3.0</version>
         </dependency>
     </dependencies>
 

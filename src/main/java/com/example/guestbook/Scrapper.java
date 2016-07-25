@@ -3,9 +3,9 @@ package com.example.guestbook;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
-
-import org.jsoup.*;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import us.codecraft.xsoup.Xsoup;
 
 import java.net.*;
 import java.io.*;
@@ -16,14 +16,10 @@ public final class Scrapper {
     static WebClient client;
 
 
-    public Document getDom(String site) {
-        if(site == null || site.equalsIgnoreCase("")) {
-            site = "http://www.akorda.kz/";
-        }
-
+    public String getDom(String site) {
         String html = openBrowser(site);
-        Document doc = Jsoup.parse(html);
-        return doc;
+//        Document doc = Jsoup.parse(html);
+        return html;
     }
 
     public static String openBrowser(String url) {
@@ -63,5 +59,10 @@ public final class Scrapper {
         return output;
     }
 
+    public String findElemenByXPath(String html, String xPath) {
+        Document document = Jsoup.parse(html);
 
+        String result = Xsoup.compile(xPath).evaluate(document).get();
+        return result;
+    }
 }
